@@ -27,7 +27,7 @@
 
 #import "EGORefreshTableHeaderView.h"
 
-@interface RootViewController : UITableViewController  <EGORefreshTableHeaderDelegate, UITableViewDelegate, UITableViewDataSource>{
+@interface RootViewController : UIViewController  <EGORefreshTableHeaderDelegate, UITableViewDelegate, UITableViewDataSource>{
 	
 	EGORefreshTableHeaderView *_refreshHeaderView;
 	
@@ -35,6 +35,8 @@
 	//  Putting it here for demo purposes 
 	BOOL _reloading;
 }
+
+@property (retain, nonatomic) IBOutlet UITableView *tableView;
 
 - (void)reloadTableViewDataSource;
 - (void)doneLoadingTableViewData;

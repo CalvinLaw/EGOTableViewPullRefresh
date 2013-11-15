@@ -30,12 +30,13 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.tableView.backgroundColor = [UIColor clearColor];
 	
 	if (_refreshHeaderView == nil) {
 		
-		EGORefreshTableHeaderView *view = [[EGORefreshTableHeaderView alloc] initWithFrame:CGRectMake(0.0f, 0.0f - self.tableView.bounds.size.height, self.view.frame.size.width, self.tableView.bounds.size.height)];
+		EGORefreshTableHeaderView *view = [[EGORefreshTableHeaderView alloc] initWithFrame:self.tableView.frame];
 		view.delegate = self;
-		[self.tableView addSubview:view];
+		[self.view insertSubview:view belowSubview:self.tableView];
 		_refreshHeaderView = view;
 		[view release];
 		
@@ -56,7 +57,7 @@
 #pragma mark UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 10;
+    return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -70,17 +71,12 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell.contentView.backgroundColor = [UIColor whiteColor];
     }
     
 	// Configure the cell.
-
+    cell.textLabel.text = @"asdfasd";
     return cell;
-}
-
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-	
-	return [NSString stringWithFormat:@"Section %i", section];
-	
 }
 
 
@@ -106,6 +102,11 @@
 
 #pragma mark -
 #pragma mark UIScrollViewDelegate Methods
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [_refreshHeaderView egoRefreshScrollViewWillBeginScroll:scrollView];
+}
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{	
 	
@@ -157,6 +158,7 @@
 - (void)dealloc {
 	
 	_refreshHeaderView = nil;
+    [_tableView release];
     [super dealloc];
 }
 

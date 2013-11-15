@@ -26,6 +26,7 @@
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
+#import "CircleView.h"
 
 typedef enum{
 	EGOOPullRefreshPulling = 0,
@@ -42,6 +43,7 @@ typedef enum{
 	UILabel *_lastUpdatedLabel;
 	UILabel *_statusLabel;
 	CALayer *_arrowImage;
+    CircleView *_circleView;
 	UIActivityIndicatorView *_activityView;
 	
 
@@ -50,6 +52,7 @@ typedef enum{
 @property(nonatomic,assign) id <EGORefreshTableHeaderDelegate> delegate;
 
 - (void)refreshLastUpdatedDate;
+- (void)egoRefreshScrollViewWillBeginScroll:(UIScrollView *)scrollView;
 - (void)egoRefreshScrollViewDidScroll:(UIScrollView *)scrollView;
 - (void)egoRefreshScrollViewDidEndDragging:(UIScrollView *)scrollView;
 - (void)egoRefreshScrollViewDataSourceDidFinishedLoading:(UIScrollView *)scrollView;

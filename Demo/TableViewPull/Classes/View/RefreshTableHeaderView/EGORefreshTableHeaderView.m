@@ -26,7 +26,6 @@
 
 #import "EGORefreshTableHeaderView.h"
 
-
 #define TEXT_COLOR	 [UIColor colorWithRed:87.0/255.0 green:108.0/255.0 blue:137.0/255.0 alpha:1.0]
 #define FLIP_ANIMATION_DURATION 0.18f
 
@@ -46,7 +45,7 @@
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 		self.backgroundColor = [UIColor colorWithRed:226.0/255.0 green:231.0/255.0 blue:237.0/255.0 alpha:1.0];
 
-		UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 30.0f, self.frame.size.width, 20.0f)];
+		UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, 10.0f, self.frame.size.width, 20.0f)];
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 		label.font = [UIFont systemFontOfSize:12.0f];
 		label.textColor = TEXT_COLOR;
@@ -58,7 +57,7 @@
 		_lastUpdatedLabel=label;
 		[label release];
 		
-		label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, frame.size.height - 48.0f, self.frame.size.width, 20.0f)];
+		label = [[UILabel alloc] initWithFrame:CGRectMake(0.0f, 28.0f, self.frame.size.width, 20.0f)];
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 		label.font = [UIFont boldSystemFontOfSize:13.0f];
 		label.textColor = TEXT_COLOR;
@@ -69,21 +68,12 @@
 		[self addSubview:label];
 		_statusLabel=label;
 		[label release];
-		
-		CALayer *layer = [CALayer layer];
-		layer.frame = CGRectMake(25.0f, frame.size.height - 65.0f, 30.0f, 55.0f);
-		layer.contentsGravity = kCAGravityResizeAspect;
-		layer.contents = (id)[UIImage imageNamed:@"blueArrow.png"].CGImage;
-		
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 40000
-		if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-			layer.contentsScale = [[UIScreen mainScreen] scale];
-		}
-#endif
-		
-		[[self layer] addSublayer:layer];
-		_arrowImage=layer;
-		
+    
+		CircleView *circleView = [[CircleView alloc] initWithFrame:CGRectMake(10, 5, 35, 35)];
+        _circleView = circleView;
+        [self addSubview:circleView];
+        [_circleView release];
+        
 		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
 		view.frame = CGRectMake(25.0f, frame.size.height - 38.0f, 20.0f, 20.0f);
 		[self addSubview:view];
@@ -145,7 +135,11 @@
 				[CATransaction setAnimationDuration:FLIP_ANIMATION_DURATION];
 				_arrowImage.transform = CATransform3DIdentity;
 				[CATransaction commit];
-			}
+			} else {
+//                _circleView.transform = CGAffineTransformIdentity;
+                _circleView.progress = 0;
+                [_circleView setNeedsDisplay];
+            }
 			
 			_statusLabel.text = NSLocalizedString(@"Pull down to refresh...", @"Pull down to refresh status");
 			[_activityView stopAnimating];
@@ -166,6 +160,22 @@
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
 			_arrowImage.hidden = YES;
 			[CATransaction commit];
+            
+            CABasicAnimation* rotate =  [CABasicAnimation animationWithKeyPath: @"transform.rotation.z"];
+            rotate.removedOnCompletion = FALSE;
+            rotate.fillMode = kCAFillModeForwards;
+            
+            //Do a series of 5 quarter turns for a total of a 1.25 turns
+            //(2PI is a full turn, so pi/2 is a quarter turn)
+            [rotate setToValue: [NSNumber numberWithFloat: M_PI / 2]];
+            rotate.repeatCount = 11;
+            
+            rotate.duration = 0.5;
+//            rotate.beginTime = start;
+            rotate.cumulative = TRUE;
+            rotate.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
+            
+            [_circleView.layer addAnimation:rotate forKey:@"rotateAnimation"];
 			
 			break;
 		default:
@@ -179,7 +189,18 @@
 #pragma mark -
 #pragma mark ScrollView Methods
 
-- (void)egoRefreshScrollViewDidScroll:(UIScrollView *)scrollView {	
+- (void)egoRefreshScrollViewWillBeginScroll:(UIScrollView *)scrollView
+{
+    BOOL _loading = NO;
+    if ([_delegate respondsToSelector:@selector(egoRefreshTableHeaderDataSourceIsLoading:)]) {
+        _loading = [_delegate egoRefreshTableHeaderDataSourceIsLoading:self];
+    }
+    if (!_loading) {
+        [self setState:EGOOPullRefreshNormal];
+    }
+}
+
+- (void)egoRefreshScrollViewDidScroll:(UIScrollView *)scrollView {
 	
 	if (_state == EGOOPullRefreshLoading) {
 		
@@ -193,12 +214,21 @@
 		if ([_delegate respondsToSelector:@selector(egoRefreshTableHeaderDataSourceIsLoading:)]) {
 			_loading = [_delegate egoRefreshTableHeaderDataSourceIsLoading:self];
 		}
+        
 		
 		if (_state == EGOOPullRefreshPulling && scrollView.contentOffset.y > -65.0f && scrollView.contentOffset.y < 0.0f && !_loading) {
 			[self setState:EGOOPullRefreshNormal];
-		} else if (_state == EGOOPullRefreshNormal && scrollView.contentOffset.y < -65.0f && !_loading) {
-			[self setState:EGOOPullRefreshPulling];
-		}
+		} else if (_state == EGOOPullRefreshNormal && scrollView.contentOffset.y < -15.0f && !_loading) {
+            float moveY = fabsf(scrollView.contentOffset.y);
+            if (moveY > 65)
+                moveY = 65;
+            _circleView.progress = (moveY-15) / (65-15);
+            [_circleView setNeedsDisplay];
+            
+            if (scrollView.contentOffset.y < -65.0f) {
+                [self setState:EGOOPullRefreshPulling];
+            }
+        }
 		
 		if (scrollView.contentInset.top != 0) {
 			scrollView.contentInset = UIEdgeInsetsZero;
@@ -228,7 +258,6 @@
 		[UIView commitAnimations];
 		
 	}
-	
 }
 
 - (void)egoRefreshScrollViewDataSourceDidFinishedLoading:(UIScrollView *)scrollView {	
@@ -237,9 +266,12 @@
 	[UIView setAnimationDuration:.3];
 	[scrollView setContentInset:UIEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f)];
 	[UIView commitAnimations];
-	
-	[self setState:EGOOPullRefreshNormal];
 
+    double delayInSeconds = 0.2;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [_circleView.layer removeAllAnimations];
+    });
 }
 
 
