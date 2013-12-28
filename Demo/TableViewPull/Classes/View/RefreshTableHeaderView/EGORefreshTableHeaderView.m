@@ -170,7 +170,7 @@
             [rotate setToValue: [NSNumber numberWithFloat: M_PI / 2]];
             rotate.repeatCount = 11;
             
-            rotate.duration = 0.5;
+            rotate.duration = 0.25;
 //            rotate.beginTime = start;
             rotate.cumulative = TRUE;
             rotate.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
