@@ -27,17 +27,11 @@
 
 #import "EGORefreshTableHeaderView.h"
 
-@interface RootViewController : UIViewController  <EGORefreshTableHeaderDelegate, UITableViewDelegate, UITableViewDataSource>{
-	
-	EGORefreshTableHeaderView *_refreshHeaderView;
-	
-	//  Reloading var should really be your tableviews datasource
-	//  Putting it here for demo purposes 
-	BOOL _reloading;
-}
+@interface RootViewController : UIViewController<EGORefreshTableHeaderDelegate, UITableViewDelegate, UITableViewDataSource>
 
-@property (retain, nonatomic) IBOutlet UITableView *tableView;
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
 
 - (void)reloadTableViewDataSource;
 - (void)doneLoadingTableViewData;
+
 @end

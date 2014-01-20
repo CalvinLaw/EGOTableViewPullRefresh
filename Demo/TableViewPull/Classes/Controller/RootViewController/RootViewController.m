@@ -27,34 +27,25 @@
 #import "RootViewController.h"
 
 @implementation RootViewController
+{	
+	EGORefreshTableHeaderView *_refreshHeaderView;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.tableView.backgroundColor = [UIColor clearColor];
 	
-	if (_refreshHeaderView == nil) {
-		
-		EGORefreshTableHeaderView *view = [[EGORefreshTableHeaderView alloc] initWithFrame:self.tableView.frame];
-		view.delegate = self;
-		[self.view insertSubview:view belowSubview:self.tableView];
-		_refreshHeaderView = view;
-		[view release];
-		
-	}
-	
-	//  update the last update date
-	[_refreshHeaderView refreshLastUpdatedDate];
-
-	
+    EGORefreshTableHeaderView *view = [[EGORefreshTableHeaderView alloc] initWithFrame:self.tableView.frame];
+    view.delegate = self;
+    [self.view insertSubview:view belowSubview:self.tableView];
+    _refreshHeaderView = view;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
 	return YES;
 }
 
-
-#pragma mark -
-#pragma mark UITableViewDataSource
+#pragma mark - UITableViewDataSource
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
@@ -70,7 +61,7 @@
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
         cell.contentView.backgroundColor = [UIColor whiteColor];
     }
     
@@ -79,89 +70,46 @@
     return cell;
 }
 
-
-#pragma mark -
-#pragma mark Data Source Loading / Reloading Methods
+#pragma mark - Data Source Loading / Reloading Methods
 
 - (void)reloadTableViewDataSource{
 	
 	//  should be calling your tableviews data source model to reload
 	//  put here just for demo
-	_reloading = YES;
-	
+	_refreshHeaderView.loading = YES;
 }
 
 - (void)doneLoadingTableViewData{
 	
 	//  model should call this when its done loading
-	_reloading = NO;
+    _refreshHeaderView.loading = NO;
 	[_refreshHeaderView egoRefreshScrollViewDataSourceDidFinishedLoading:self.tableView];
 	
 }
 
-
-#pragma mark -
-#pragma mark UIScrollViewDelegate Methods
+#pragma mark - UIScrollViewDelegate Methods
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
     [_refreshHeaderView egoRefreshScrollViewWillBeginScroll:scrollView];
 }
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView{	
-	
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
 	[_refreshHeaderView egoRefreshScrollViewDidScroll:scrollView];
-		
 }
 
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
-	
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
 	[_refreshHeaderView egoRefreshScrollViewDidEndDragging:scrollView];
-	
 }
 
-
-#pragma mark -
-#pragma mark EGORefreshTableHeaderDelegate Methods
+#pragma mark - EGORefreshTableHeaderDelegate Methods
 
 - (void)egoRefreshTableHeaderDidTriggerRefresh:(EGORefreshTableHeaderView*)view{
-	
 	[self reloadTableViewDataSource];
 	[self performSelector:@selector(doneLoadingTableViewData) withObject:nil afterDelay:3.0];
-	
 }
-
-- (BOOL)egoRefreshTableHeaderDataSourceIsLoading:(EGORefreshTableHeaderView*)view{
-	
-	return _reloading; // should return if data source model is reloading
-	
-}
-
-- (NSDate*)egoRefreshTableHeaderDataSourceLastUpdated:(EGORefreshTableHeaderView*)view{
-	
-	return [NSDate date]; // should return date data source was last changed
-	
-}
-
-
-#pragma mark -
-#pragma mark Memory Management
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-}
-
-- (void)viewDidUnload {
-	_refreshHeaderView=nil;
-}
-
-- (void)dealloc {
-	
-	_refreshHeaderView = nil;
-    [_tableView release];
-    [super dealloc];
-}
-
 
 @end
 
